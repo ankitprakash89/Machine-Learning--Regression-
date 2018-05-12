@@ -1,0 +1,230 @@
+---
+title: "Regression"
+author: "Ankit Prakash"
+date: "24 April 2018"
+output: html_document
+---
+```{r}
+library(dplyr)
+library(ggplot2)
+library(plotly)
+advert <- read.csv("C:/Users/Administrator/Desktop/Machine Learning/Datasets/Advertising.csv")
+
+adv_training <- advert[sample(seq(1,nrow(advert)), 160),]
+adv_testing <- advert[sample(seq(1,nrow(advert)),40),]
+
+adv_model <- lm(sales~TV, data = adv_training)
+adv_model
+
+```
+
+```{r}
+e<- c()
+r <- seq(-1, 1, length.out = 100)
+for (i in r){
+  m = i
+  c = 1
+
+  sales_predicted = m * adv_training$TV + c
+
+# MSE error
+  error <- sum((adv_training$sales - sales_predicted) ^ 2) / nrow(adv_training)
+  #{{plot(adv_training$TV, adv_training$sales)
+  #lines(adv_training$TV, sales_predicted)}}
+  e <- append(e, error)
+}
+ plot(e)
+ 
+```
+
+
+```{r}
+r <- seq(-1,1, length.out = 100)
+s <- seq(-10,10, length.out = 100)
+m_rep <- c()
+c_rep <- c()
+e <- c()
+for(i in r){
+  for(j in s){
+    m = i
+    c = j
+    sales_predicted = m * adv_training$TV + c
+    error <- sum((adv_training$sales - sales_predicted) ^ 2) / nrow(adv_training)
+    m_rep <- append(m_rep, i)
+    c_rep <- append(c_rep, j)
+    e <- append(e, error)
+  }
+}
+models <- data.frame(slope = m_rep, intercept = c_rep, mse = e)
+dim(models)
+models %>% arrange(mse) %>% head(1)
+```
+
+```{r}
+mspace = r
+cspace = s
+zspace = matrix(e, nrow = length(r), ncol = length(s))
+plot_ly(x= mspace, y = cspace, z = zspace) %>%  add_surface()
+
+```
+
+
+```{r}
+m1<- seq(-1,1, length.out = 100)
+m2<- seq(-1,1, length.out = 100)
+c <- seq(-10,10, length.out = 100)
+m1_rep <- c()
+m2_rep <- c()
+c_rep <- c()
+e <- c()
+for(i in m1){
+  for(j in m2){
+    for(k in c){
+    sales_predicted = i* adv_training$TV + j*adv_training$radio + k
+    error <- sum((adv_training$sales - sales_predicted) ^ 2) / nrow(adv_training)
+    m1_rep <- c(m1_rep, i)
+    m2_rep <- c(m1_rep, j)
+    c_rep <- c(c_rep, k)
+    e <- c(e, error)
+    }
+  }
+}
+```
+
+```{r}
+###################
+##Gradient Descent
+x = rnorm(100)
+y = 0.05 *x
+df_xy = data.frame(x=x, y=y)
+plot(x, y)
+cor(x,y)
+
+m = 0
+alpha = 0.01
+library(dplyr)
+df_xy = df_xy %>%  mutate(xy = x*y)
+df_xy = df_xy %>%  mutate(m_square = m * (x^2))
+```
+#Gradient Desent Theory and implementation while keeping c as constant in eqn y = mx + c
+```{r}
+m=1000
+alpha = 0.01
+n_iterations = 1000
+errors <- c()
+m_vals <- c()
+for( i in seq(1,n_iterations)){
+  m_vals = c(m_vals, m)
+  curr_err <- sum(( y - (m*x))^2)/length(x)
+  errors = c(errors, curr_err)
+  df_xy = df_xy %>%  mutate(xy = x*y)
+  df_xy = df_xy %>%  mutate(mx_square = m * (x^2))
+  df_xy = df_xy %>% mutate(xy_mx2 = xy - mx_square)
+  sigma_xy_mx2 = sum(df_xy$xy_mx2)
+  m_gradient = -2 /length(x) * sigma_xy_mx2
+  m = m - alpha  * m_gradient
+}
+print(m)
+{{plot(m_vals, errors)
+  lines(m_vals, errors)}}
+```
+#Gradient Desent Theory and implementation of eqn y = mx + c
+```{r}
+advert <- read.csv("C:/Users/Administrator/Desktop/Machine Learning/Datasets/Advertising.csv")
+adv_training <- advert[sample(seq(1, nrow(advert)), 160),]
+adv_testing <- advert[sample(seq(1, nrow(advert)), 40),]
+lm(sales~TV, data = adv_training)
+```
+
+```{r}
+m = 10
+alpha = 0.01
+c = 0
+n_iterations = 1000
+y <- adv_training$sales
+x <- scale(adv_training$TV)
+df_xy <- data.frame(x=x,y=y)
+m_vals <- c()
+c_vals <- c()
+error <- c()
+for( i in seq(1,n_iterations))
+  { 
+  df_xy <- mutate(df_xy, yhat2 = (y - m*x-c)^2)
+  errors = c(error, 1/length(x)*sum(df_xy$yhat2))
+  m_vals <- c(m_vals, m)
+  c_vals <- c(c_vals, c)
+  df_xy = df_xy %>% mutate(xy = x*y)
+  df_xy = df_xy %>% mutate (cx = c*x)
+  df_xy = df_xy %>% mutate(mx_square = m * (x^2))
+  df_xy = df_xy %>% mutate(xy_mx2_cx = (xy - mx_square - cx))
+  
+  df_xy = df_xy %>% mutate (mx = m*x)
+  df_xy = df_xy %>% mutate(y_mx_c = (y - mx - c))
+  
+  sigma_xy_mx2_cx = sum(df_xy$xy_mx2_cx)
+  m_gradient = -2 /length(x) * sigma_xy_mx2_cx
+  
+  sigma_y_mx_c = sum(df_xy$y_mx_c)
+  c_gradient = -2 /length(x) * sigma_y_mx_c
+  
+  m = m - alpha  * m_gradient
+  c = c - alpha  * c_gradient
+}
+print(m)
+print(c)
+
+m <- seq(-10,10, length.out = 100)
+c <- seq(-15,15, length.out = 100)
+m_rep <- c()
+c_rep <- c()
+e <- c()
+for(i in m){
+  for(j in c){
+    #yhat <-  
+    error <- sum((adv_training$sales - sales_predicted) ^ 2) 
+    m_rep <- append(m_rep, i)
+    c_rep <- append(c_rep, j)
+    e <- append(e, error)
+  }
+}
+install.packages("rgl")
+library(rgl)
+open3d()
+plot3d(x  = m_rep, y = c_rep, z= e, col = rainbow(100))
+plot3d(x= m_vals, y= c_vals, z= errors)#, add= TRUE)
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+summary(cars)
+```
+
+

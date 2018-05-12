@@ -1,0 +1,63 @@
+---
+title: "ML- Regression Using LM function"
+author: "Ankit Prakash"
+date: "12 May 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+advert <- read.csv("C:/Users/Administrator/Desktop/Machine Learning/Datasets/Advertising.csv")
+names(advert)
+
+#to identify the percentage of missing value
+colSums(is.na(advert))/nrow(advert) *100
+
+#to check the outliers
+boxplot(advert)
+```
+
+Spliting of Test and Training Dataset
+```{r}
+# Method 1 
+df_train <- advert[1: 160,]
+df_test <- advert[161:200,]
+
+# Method 2: Randoming sampling with replacement
+df_training <- advert[sample(seq(1,nrow(advert)), 160),]
+df_testing <- advert[sample(seq(1,nrow(advert)),40),]
+names(df_test)
+```
+
+Feature Selection
+```{r}
+#use all the input variable -> TV, Newspaper, Radio
+```
+
+Fit a model
+```{r}
+adv_model <- lm(sales~ TV+radio+newspaper, data = df_training)
+adv_model
+```
+Predict Sales Values foe Testing data set
+```{r}
+df_testing$sales_pred <- predict(adv_model, df_testing[2:4])
+```
+
+To calculate error for all the rows
+```{r}
+df_testing$error <- df_testing$sales - df_testing$sales_pred
+View(df_testing)
+
+df_testing$sqr_error <- df_testing$error^2
+sum(df_testing$sqr_error)
+
+```
+
+```{r}
+{{plot(df_testing$sales, type = "l")
+  lines(df_testing$sales_pred, col = "Red")}}
+```
+
+```{r}
+
+```
